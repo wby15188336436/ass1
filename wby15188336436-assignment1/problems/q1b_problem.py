@@ -26,16 +26,17 @@ class q1b_problem:
         goal: A position in the gameState
         """
         self.startingGameState: GameState = gameState
+        self.walls = gameState.getWalls()
+        self.food = frozenset(gameState.getFood().asList())
 
     @log_function
     def getStartState(self):
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.startingGameState.getPacmanPosition()
 
     @log_function
     def isGoalState(self, state):
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # Q1b requires collecting one chosen dot (not all dots).
+        return state in self.food
 
     @log_function
     def getSuccessors(self, state):
@@ -49,6 +50,14 @@ class q1b_problem:
          required to get there, and 'stepCost' is the incremental
          cost of expanding to that successor
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        x, y = state
+        successors = []
 
+        for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
+            dx, dy = Actions.directionToVector(action)
+            next_x, next_y = int(x + dx), int(y + dy)
+            if self.walls[next_x][next_y]:
+                continue
+            successors.append(((next_x, next_y), action, 1))
+
+        return successors
