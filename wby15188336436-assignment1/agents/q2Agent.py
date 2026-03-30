@@ -10,18 +10,52 @@ from util import manhattanDistance
 
 def scoreEvaluationFunction(currentGameState):
     """
-      This default evaluation function just returns the score of the state.
-      The score is the same one displayed in the Pacman GUI.
-
-      This evaluation function is meant for use with adversarial search agents
-      (not reflex agents).
+    Stronger evaluation than raw score:
+    - prefer high game score
+    - prefer being closer to food/capsules
+    - avoid active ghosts, chase scared ghosts
     """
-    return currentGameState.getScore()
+    if currentGameState.isWin():
+        return float('inf')
+    if currentGameState.isLose():
+        return float('-inf')
+
+    score = currentGameState.getScore()
+    pacman_pos = currentGameState.getPacmanPosition()
+
+    food = currentGameState.getFood().asList()
+    if food:
+        closest_food = min(manhattanDistance(pacman_pos, f) for f in food)
+        score += 8.0 / (closest_food + 1)
+        score -= 0.25 * len(food)
+
+    capsules = currentGameState.getCapsules()
+    if capsules:
+        closest_capsule = min(manhattanDistance(pacman_pos, c) for c in capsules)
+        score += 3.0 / (closest_capsule + 1)
+        score -= 1.5 * len(capsules)
+
+    for ghost_state in currentGameState.getGhostStates():
+        ghost_pos = ghost_state.getPosition()
+        d = manhattanDistance(pacman_pos, ghost_pos)
+        scared = ghost_state.scaredTimer
+
+        if scared > 0:
+            score += 6.0 / (d + 1)
+        else:
+            if d == 0:
+                return float('-inf')
+            if d < 2:
+                score -= 30
+            score -= 2.0 / d
+
+    return score
+
 
 class Q2_Agent(Agent):
 
-    def __init__(self, evalFn = 'scoreEvaluationFunction', depth = '3'):
-        self.index = 0 # Pacman is always agent index 0
+    def __init__(self, evalFn='scoreEvaluationFunction', depth='3'):
+        self.index = 0  # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
 

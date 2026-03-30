@@ -31,13 +31,12 @@ class q1b_problem:
 
     @log_function
     def getStartState(self):
-        start = self.startingGameState.getPacmanPosition()
-        return (start, self.food)
+        return self.startingGameState.getPacmanPosition()
 
     @log_function
     def isGoalState(self, state):
-        _, remaining_food = state
-        return len(remaining_food) == 0
+        # Q1b requires collecting one chosen dot (not all dots).
+        return state in self.food
 
     @log_function
     def getSuccessors(self, state):
@@ -51,7 +50,7 @@ class q1b_problem:
          required to get there, and 'stepCost' is the incremental
          cost of expanding to that successor
         """
-        (x, y), remaining_food = state
+        x, y = state
         successors = []
 
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
@@ -59,12 +58,6 @@ class q1b_problem:
             next_x, next_y = int(x + dx), int(y + dy)
             if self.walls[next_x][next_y]:
                 continue
-
-            next_pos = (next_x, next_y)
-            next_food = remaining_food
-            if next_pos in remaining_food:
-                next_food = frozenset(f for f in remaining_food if f != next_pos)
-
-            successors.append(((next_pos, next_food), action, 1))
+            successors.append(((next_x, next_y), action, 1))
 
         return successors

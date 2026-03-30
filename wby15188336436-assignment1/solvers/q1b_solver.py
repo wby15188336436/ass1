@@ -27,7 +27,6 @@ class AStarData:
         self.best_g = {}
         self.parents = {}
         self.closed = set()
-        self.mst_cache = {}
 
 
 def astar_initialise(problem: q1b_problem):
@@ -35,7 +34,7 @@ def astar_initialise(problem: q1b_problem):
     start = problem.getStartState()
     astarData.best_g[start] = 0
     astarData.parents[start] = (None, None)
-    astarData.frontier.push((start, 0), astar_heuristic(start, astarData))
+    astarData.frontier.push((start, 0), astar_heuristic(start, problem.food))
     return astarData
 
 
@@ -61,49 +60,16 @@ def astar_loop_body(problem: q1b_problem, astarData: AStarData):
         if new_g < astarData.best_g.get(successor, float('inf')):
             astarData.best_g[successor] = new_g
             astarData.parents[successor] = (state, action)
-            f_cost = new_g + astar_heuristic(successor, astarData)
+            f_cost = new_g + astar_heuristic(successor, problem.food)
             astarData.frontier.push((successor, new_g), f_cost)
 
     return False, None
 
 
-def astar_heuristic(current, astarData: AStarData):
-    position, remaining_food = current
-    if not remaining_food:
+def astar_heuristic(current, goals):
+    if not goals:
         return 0
-
-    nearest = min(util.manhattanDistance(position, food) for food in remaining_food)
-    mst = _mst_cost(remaining_food, astarData.mst_cache)
-    return nearest + mst
-
-
-def _mst_cost(points_frozen, cache):
-    if points_frozen in cache:
-        return cache[points_frozen]
-
-    points = list(points_frozen)
-    if len(points) <= 1:
-        cache[points_frozen] = 0
-        return 0
-
-    visited = {points[0]}
-    total = 0
-    while len(visited) < len(points):
-        best = float('inf')
-        best_point = None
-        for u in visited:
-            for v in points:
-                if v in visited:
-                    continue
-                d = util.manhattanDistance(u, v)
-                if d < best:
-                    best = d
-                    best_point = v
-        visited.add(best_point)
-        total += best
-
-    cache[points_frozen] = total
-    return total
+    return min(util.manhattanDistance(current, food) for food in goals)
 
 
 def _reconstruct_path(goal_state, parents):
