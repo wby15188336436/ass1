@@ -45,5 +45,57 @@ class Q2_Agent(Agent):
         """
         logger = logging.getLogger('root')
         logger.info('MinimaxAgent')
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        legal_actions = [a for a in gameState.getLegalActions(0) if a != Directions.STOP]
+        if not legal_actions:
+            legal_actions = gameState.getLegalActions(0)
+        if not legal_actions:
+            return Directions.STOP
+
+        best_score = float('-inf')
+        best_action = legal_actions[0]
+        alpha = float('-inf')
+        beta = float('inf')
+
+        for action in legal_actions:
+            successor = gameState.generateSuccessor(0, action)
+            score = self._alphabeta(successor, depth=0, agent_index=1, alpha=alpha, beta=beta)
+            if score > best_score:
+                best_score = score
+                best_action = action
+            alpha = max(alpha, best_score)
+
+        return best_action
+
+    def _alphabeta(self, state: GameState, depth: int, agent_index: int, alpha: float, beta: float):
+        if depth == self.depth or state.isWin() or state.isLose():
+            return self.evaluationFunction(state)
+
+        num_agents = state.getNumAgents()
+
+        if agent_index >= num_agents:
+            return self._alphabeta(state, depth + 1, 0, alpha, beta)
+
+        legal_actions = state.getLegalActions(agent_index)
+        if not legal_actions:
+            return self.evaluationFunction(state)
+
+        if agent_index == 0:
+            value = float('-inf')
+            actions = [a for a in legal_actions if a != Directions.STOP] or legal_actions
+            for action in actions:
+                successor = state.generateSuccessor(agent_index, action)
+                value = max(value, self._alphabeta(successor, depth, agent_index + 1, alpha, beta))
+                if value >= beta:
+                    return value
+                alpha = max(alpha, value)
+            return value
+
+        value = float('inf')
+        for action in legal_actions:
+            successor = state.generateSuccessor(agent_index, action)
+            value = min(value, self._alphabeta(successor, depth, agent_index + 1, alpha, beta))
+            if value <= alpha:
+                return value
+            beta = min(beta, value)
+        return value
